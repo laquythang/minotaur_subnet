@@ -251,11 +251,13 @@ async def run_bench(
                          f"  set MINOTAUR_SOLVER_OSS to the minotaur-solver-oss checkout")
     candidate_path = candidate_solver or EXAMPLE_CANDIDATE
 
-    # Cold pool discovery makes the FIRST quote slow (Base RPC round-trips); the default
-    # 5s QUOTE timeout kills the solver. Give it generate_plan's budget for lab runs.
+    # Cold pool discovery makes the FIRST quote/plan slow (Base RPC round-trips); defaults
+    # (5s QUOTE / 30s GENERATE_PLAN) kill the solver on first fork run.
     from minotaur_subnet.harness import protocol as _protocol
     _protocol.TIMEOUTS[_protocol.Command.QUOTE] = max(
         _protocol.TIMEOUTS.get(_protocol.Command.QUOTE, 5.0), 45.0)
+    _protocol.TIMEOUTS[_protocol.Command.GENERATE_PLAN] = max(
+        _protocol.TIMEOUTS.get(_protocol.Command.GENERATE_PLAN, 30.0), 90.0)
 
     # 1. fork (sealed: pin a single block so solver + sim agree)
     if cfg.anvil_rpc:
